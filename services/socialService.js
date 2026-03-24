@@ -12,6 +12,14 @@ const followUser = async ({ currentUserId, targetUserId }) => {
     throw new AppError("Target user not found", 404);
   }
 
+  const existingRelation = await Follower.findOne({
+    followerid: currentUserId,
+    followingid: targetUserId,
+  }).select("_id");
+  if (existingRelation) {
+    throw new AppError("Already following this user", 409);
+  }
+
   const relation = await Follower.create({
     followerid: currentUserId,
     followingid: targetUserId,

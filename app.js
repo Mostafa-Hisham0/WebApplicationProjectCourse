@@ -12,6 +12,7 @@ const videoRoutes = require("./routes/videoRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 
 const app = express();
+app.set("etag", false);
 
 app.use(morgan("dev"));
 app.use(express.json());
@@ -26,6 +27,10 @@ app.get("/health", (_req, res) => {
   });
 });
 
+app.use("/api-docs", (req, res, next) => {
+  res.set("Cache-Control", "no-store");
+  next();
+});
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/users", userRoutes);

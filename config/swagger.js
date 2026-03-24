@@ -13,7 +13,7 @@ const options = {
         url: "http://localhost:{port}",
         variables: {
           port: {
-            default: "3000",
+            default: "5000",
           },
         },
       },
@@ -27,6 +27,18 @@ const options = {
         },
       },
       schemas: {
+        ErrorResponse: {
+          type: "object",
+          properties: {
+            success: { type: "boolean", example: false },
+            error: {
+              type: "object",
+              properties: {
+                message: { type: "string", example: "Validation failed" },
+              },
+            },
+          },
+        },
         NotificationPreferences: {
           type: "object",
           properties: {
@@ -102,10 +114,47 @@ const options = {
         },
       },
       "/api/v1/auth/register": {
-        post: { tags: ["Auth"], summary: "Register user account" },
+        post: {
+          tags: ["Auth"],
+          summary: "Register user account",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["username", "email", "password"],
+                  properties: {
+                    username: { type: "string", example: "new_user_123" },
+                    email: { type: "string", format: "email", example: "newuser@example.com" },
+                    password: { type: "string", example: "UserPass123!" },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       "/api/v1/auth/login": {
-        post: { tags: ["Auth"], summary: "Login and receive JWT token" },
+        post: {
+          tags: ["Auth"],
+          summary: "Login and receive JWT token",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["email", "password"],
+                  properties: {
+                    email: { type: "string", format: "email", example: "alice@clipsphere.local" },
+                    password: { type: "string", example: "UserPass123!" },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
       "/api/v1/users/me": {
         get: {
@@ -119,6 +168,21 @@ const options = {
           tags: ["Users"],
           summary: "Update own profile metadata",
           security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    username: { type: "string", example: "alice_creator_v2" },
+                    bio: { type: "string", example: "Updated bio from Swagger" },
+                    avatarKey: { type: "string", example: "avatars/alice-new.png" },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       "/api/v1/users/{id}": {
@@ -140,6 +204,36 @@ const options = {
           tags: ["Users"],
           summary: "Update notification preferences",
           security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    inApp: {
+                      type: "object",
+                      properties: {
+                        followers: { type: "boolean" },
+                        comments: { type: "boolean" },
+                        likes: { type: "boolean" },
+                        tips: { type: "boolean" },
+                      },
+                    },
+                    email: {
+                      type: "object",
+                      properties: {
+                        followers: { type: "boolean" },
+                        comments: { type: "boolean" },
+                        likes: { type: "boolean" },
+                        tips: { type: "boolean" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       "/api/v1/users/{id}/follow": {
@@ -205,6 +299,32 @@ const options = {
           tags: ["Videos"],
           summary: "Create video metadata",
           security: [{ bearerAuth: [] }],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["title", "videoURL", "duration"],
+                  properties: {
+                    title: { type: "string", example: "My short clip" },
+                    description: { type: "string", example: "Metadata-only upload test" },
+                    videoURL: {
+                      type: "string",
+                      example: "https://cdn.clipsphere.local/videos/demo.mp4",
+                    },
+                    duration: { type: "integer", maximum: 300, example: 95 },
+                    timestamps: {
+                      type: "array",
+                      items: { type: "number" },
+                      example: [10, 35, 70],
+                    },
+                    status: { type: "string", enum: ["public", "private", "flagged"] },
+                  },
+                },
+              },
+            },
+          },
         },
         get: {
           tags: ["Videos"],
@@ -224,6 +344,20 @@ const options = {
               schema: { type: "string" },
             },
           ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string", example: "Updated title" },
+                    description: { type: "string", example: "Updated description" },
+                  },
+                },
+              },
+            },
+          },
         },
         delete: {
           tags: ["Videos"],
@@ -252,6 +386,21 @@ const options = {
               schema: { type: "string" },
             },
           ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["rating"],
+                  properties: {
+                    rating: { type: "integer", minimum: 1, maximum: 5, example: 4 },
+                    comment: { type: "string", example: "Great clip" },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       "/api/v1/admin/stats": {
@@ -274,6 +423,20 @@ const options = {
               schema: { type: "string" },
             },
           ],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: {
+                    active: { type: "boolean", example: false },
+                    accountstatus: { type: "string", example: "suspended" },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       "/api/v1/admin/moderation": {
@@ -288,4 +451,67 @@ const options = {
   apis: [],
 };
 
-module.exports = swaggerJSDoc(options);
+const swaggerSpec = swaggerJSDoc(options);
+
+const defaultResponses = {
+  200: { description: "Success" },
+  201: { description: "Created" },
+  400: {
+    description: "Bad Request",
+    content: {
+      "application/json": {
+        schema: { $ref: "#/components/schemas/ErrorResponse" },
+      },
+    },
+  },
+  401: {
+    description: "Unauthorized",
+    content: {
+      "application/json": {
+        schema: { $ref: "#/components/schemas/ErrorResponse" },
+      },
+    },
+  },
+  403: {
+    description: "Forbidden",
+    content: {
+      "application/json": {
+        schema: { $ref: "#/components/schemas/ErrorResponse" },
+      },
+    },
+  },
+  404: {
+    description: "Not Found",
+    content: {
+      "application/json": {
+        schema: { $ref: "#/components/schemas/ErrorResponse" },
+      },
+    },
+  },
+  409: {
+    description: "Conflict",
+    content: {
+      "application/json": {
+        schema: { $ref: "#/components/schemas/ErrorResponse" },
+      },
+    },
+  },
+  500: {
+    description: "Internal Server Error",
+    content: {
+      "application/json": {
+        schema: { $ref: "#/components/schemas/ErrorResponse" },
+      },
+    },
+  },
+};
+
+Object.values(swaggerSpec.paths).forEach((pathItem) => {
+  Object.values(pathItem).forEach((operation) => {
+    if (!operation.responses) {
+      operation.responses = defaultResponses;
+    }
+  });
+});
+
+module.exports = swaggerSpec;
